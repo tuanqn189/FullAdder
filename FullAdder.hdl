@@ -1,0 +1,15 @@
+// FULL ADDER GATE
+// Chip Name: FullAdder
+// Inputs: a, b, c
+// Outputs: out, carry
+// Built by adding two HalfAdders together with an Or gate
+
+CHIP FullAdder {
+	IN a, b, c;
+	OUT sum, carry;
+
+    PARTS:
+	HalfAdder(a=a, b=b, sum=outTemp, carry=carry1);
+	HalfAdder(a=outTemp, b=c, sum=sum, carry=carry2);
+	Or(a=carry1, b=carry2, out=carry);
+}
