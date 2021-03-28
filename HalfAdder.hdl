@@ -1,0 +1,18 @@
+// HALF ADDER GATE
+// Chip Name: HalfAdder
+// Inputs: a, b
+// Outputs: out, carry
+// Function: 	if a=1 & b=0, sum=1
+//		if a=0 & b=1, sum=1
+//		else sum=0
+//		if a=b=1, carry=1
+//		else carry=0
+
+CHIP HalfAdder {
+	IN a, b;
+	OUT sum, carry;
+
+    PARTS:
+	Xor(a=a,b=b,out=sum);
+	And(a=a,b=b,out=carry);
+}
