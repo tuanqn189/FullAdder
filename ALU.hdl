@@ -1,0 +1,73 @@
+// Chip Name: ALU
+// Inputs: 	x[16], y[16],
+//		zx, nx
+//		zy, ny
+//		f, no
+// Outputs:	out[16],
+//		zr,
+//		ng
+// Functions:	if zx then x=0, if nx then x=!x
+//		if zy then y=0, if ny then y=!y
+//		if f then out=x+y, else out=x&y
+//		if no then out=!out, else out=out
+//		if out=0 then zr=1 else zr=0
+//		if out<0 then ng=1 else ng=0
+
+CHIP ALU {
+	IN x[16], y[16], zx, nx, zy, ny, f, no;
+	OUT out[16], zr, ng;
+
+    PARTS:
+	// processing zx and nx
+	Mux16(a=x, b=false, sel=zx, out=outzx);		// Set x as zero depending on zx
+	Not16(in=outzx, out=notx);			// Negate x (outzx at this point)
+	Mux16(a=outzx, b=notx, sel=nx, out=outx);	// Decide whether to keep x (outzx at this point) or notx
+	
+	// processing zy and ny
+	Mux16(a=y, b=false, sel=zy, out=outzy);		// Set y as zero depending on zy
+	Not16(in=outzy, out=noty);			// Negate y (outzy at this point)
+	Mux16(a=outzy, b=noty, sel=ny, out=outy);	// Decide whether to keep y (outzy at this point) or noty
+	
+	// processing the function f
+	Add16(a=outx, b=outy, out=sumxy);		// Calculate f(x+y)
+	And16(a=outx, b=outy, out=andxy);		// Calculate x&y
+	Mux16(a=andxy, b=sumxy, sel=f, out=outf);	// Decide which function result to keep
+
+	// processing the not
+	Not16(in=outf, out=notoutf);			// Negate the result
+	// Decide whether to keep the result or the negated result
+	Mux16(a=outf, b=notoutf, sel=no, out[0]=temp0, out=outTemp, out[1]=temp1, out[2]=temp2, out[3]=temp3, out[4]=temp4,
+	out[5]=temp5, out[6]=temp6, out[7]=temp7, out[8]=temp8, out[9]=temp9, out[10]=temp10, out[11]=temp11,
+	out[12]=temp12, out[13]=temp13, out[14]=temp14, out[15]=temp15);
+
+	// I'm using outTemp because I got an error earlier that I can't connect gate's output pin in start
+	// for the codes below calculating zr and ng
+	
+	// finding zr
+	Or(a=temp0, b=temp1, out=a);
+	Or(a=a, b=temp2, out=b);
+	Or(a=b, b=temp3, out=c);
+	Or(a=c, b=temp4, out=d);
+	Or(a=d, b=temp5, out=e);
+	Or(a=e, b=temp6, out=f1);			// Using f1 to prevent clashing with input f
+	Or(a=f1, b=temp7, out=g);
+	Or(a=g, b=temp8, out=h);
+	Or(a=h, b=temp9, out=i);
+	Or(a=i, b=temp10, out=j);
+	Or(a=j, b=temp11, out=k);
+	Or(a=k, b=temp12, out=l);
+	Or(a=l, b=temp13, out=m);
+	Or(a=m, b=temp14, out=n);
+	Or(a=n, b=temp15, out=notzr);			// notzr = 1 if out[16] is not 0
+	Not(in=notzr, out=zr);				// Negate notzr to get zr which is 1 when out[16] = 0
+
+	// finding ng
+	// I might be wrong in this but researching on the internet shows that
+	// positive and negative bits can be differentiate by their most significant bit
+	// Therefore, I will assign ng as the most significant bit of the output
+	// by using the And gate between a[15] and true (1)
+	And(a=temp15, b=true, out=ng);
+	
+	// Finally, converting outTemp to the official out value using the AND16 GATE
+	And16(a=outTemp, b=true, out = out);
+}
